@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentación: Sistema de Detección de EPPs</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+
+    :root {
+      --bg: #080C16;
+      --surface: #0F1623;
+      --accent: #F5A623;
+      --text: #F1F5F9;
+      --muted: #64748B;
+      --border: #1F2D45;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .slides-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 8% 12%;
+      opacity: 0;
+      transform: translateY(50px) scale(0.95);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+    }
+
+    /* Decoraciones de fondo */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: -1;
+      opacity: 0.2;
+    }
+    .shape1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--accent); }
+    .shape2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: #3B82F6; }
+
+    /* Tipografía */
+    .title {
+      font-size: 4.2rem;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      background: linear-gradient(to right, #FFFFFF, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.4rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 900px;
+      font-weight: 300;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .content-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 40px;
+      color: var(--accent);
+      align-self: flex-start;
+      width: 100%;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 15px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      width: 100%;
+    }
+
+    /* Tarjetas de contenido */
+    .card {
+      background: rgba(15, 22, 35, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 35px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+      transition: transform 0.4s, border-color 0.4s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(245, 166, 35, 0.4); }
+
+    .card h3 { font-size: 1.6rem; margin-bottom: 20px; color: #FFFFFF; font-weight: 700; }
+    .card p { font-size: 1.15rem; color: #cbd5e1; line-height: 1.7; margin-bottom: 15px; }
+    .card ul { padding-left: 24px; margin-bottom: 15px; }
+    .card li { font-size: 1.15rem; color: #cbd5e1; line-height: 1.7; margin-bottom: 10px; }
+
+    /* Tags tecnológicos */
+    .tech-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; }
+    .tag { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #60A5FA; padding: 6px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; }
+
+    /* Tabla */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { text-align: left; padding: 15px; border-bottom: 1px solid var(--border); font-size: 1.1rem; color: #cbd5e1; }
+    th { color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--border); }
+
+    /* Controles */
+    .controls {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      display: flex;
+      gap: 15px;
+      z-index: 100;
+    }
+
+    .btn-nav {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .btn-nav:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn-nav svg { width: 24px; height: 24px; }
+    
+    .progress-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: var(--surface); z-index: 100;
+    }
+    .progress-bar {
+      height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease;
+    }
+
+    .demo-btn {
+      padding: 16px 48px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 50px;
+      display: inline-block;
+      transition: all 0.3s;
+      letter-spacing: 0.02em;
+    }
+    .demo-btn:hover { background: #FFFFFF; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(245, 166, 35, 0.3); }
+
+    .slide-number {
+      position: fixed;
+      bottom: 40px;
+      left: 40px;
+      font-size: 1.1rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
+
+  <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+  <div class="slide-number" id="slide-number">01 / 07</div>
+
+  <div class="slides-container" id="slides">
+    
+    <!-- DIAPOSITIVA 1: Portada -->
+    <div class="slide active">
+      <h1 class="title">Sistema Inteligente<br>de Detección de EPPs</h1>
+      <p class="subtitle">Validación y control de acceso automatizado mediante algoritmos de Visión Computacional y Redes Neuronales Convolucionales.</p>
+      <div class="tech-tags" style="justify-content: center; margin-top: 30px;">
+        <span class="tag">Visión Computacional</span>
+        <span class="tag">Machine Learning</span>
+        <span class="tag">Seguridad Industrial</span>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 2: Planteamiento del Problema -->
+    <div class="slide">
+      <h2 class="content-title">Planteamiento del Problema</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Accidentabilidad en el Sector Industrial</h3>
+          <p>La omisión o el uso incorrecto de los Equipos de Protección Personal (EPP) constituye una de las principales causas de lesiones graves y fatalidades en sectores de alto riesgo como la construcción, minería y manufactura.</p>
+        </div>
+        <div class="card">
+          <h3>Deficiencias de la Supervisión Manual</h3>
+          <ul>
+            <li><strong>Intermitencia:</strong> Imposibilidad de mantener una vigilancia exhaustiva sobre todo el personal simultáneamente.</li>
+            <li><strong>Error humano:</strong> Susceptibilidad a la fatiga visual, distracciones o complacencia por parte del supervisor.</li>
+            <li><strong>Costos operativos:</strong> Alta inversión requerida para mantener personal dedicado exclusivamente a labores de verificación.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 3: Objetivos del Proyecto -->
+    <div class="slide">
+      <h2 class="content-title">Objetivos del Proyecto</h2>
+      <div class="card" style="width: 100%; max-width: 1000px;">
+        <h3>Objetivo General</h3>
+        <p>Desarrollar e implementar un sistema informático capaz de identificar en tiempo real la presencia de equipos de seguridad en el personal, automatizando la decisión de control de acceso a zonas restringidas.</p>
+        <br>
+        <h3>Objetivos Específicos</h3>
+        <ul>
+          <li>Entrenar un modelo de detección de objetos capaz de reconocer cinco categorías de EPPs bajo diversas condiciones de iluminación y perspectiva.</li>
+          <li>Integrar el modelo predictivo con una interfaz gráfica intuitiva que procese flujos de video continuo.</li>
+          <li>Diseñar una arquitectura escalable que permita procesar la inferencia en la nube sin requerir hardware especializado en el punto de acceso.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 4: Marco Tecnológico (YOLO11) -->
+    <div class="slide">
+      <h2 class="content-title">Marco Tecnológico Base</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Algoritmo YOLO11 (You Only Look Once)</h3>
+          <p>YOLO es el estándar industrial actual para la detección de objetos en tiempo real. A diferencia de clasificadores tradicionales, YOLO aplica una única red neuronal a toda la imagen, dividiéndola en una cuadrícula para predecir cuadros delimitadores (bounding boxes) y probabilidades de clase simultáneamente.</p>
+          <div class="tech-tags">
+            <span class="tag">Alta Velocidad</span>
+            <span class="tag">Precisión Multiclase</span>
+            <span class="tag">Baja Latencia</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Plataforma Roboflow</h3>
+          <p>Plataforma integral de Computer Vision utilizada para la gestión del ciclo de vida del modelo. Se empleó para el preprocesamiento de imágenes, el aumento de datos (Data Augmentation) y el despliegue del modelo entrenado mediante una Interfaz de Programación de Aplicaciones (API) REST.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 5: Entrenamiento y Categorización -->
+    <div class="slide">
+      <h2 class="content-title">Proceso de Entrenamiento y Datos</h2>
+      <div class="card" style="width: 100%; max-width: 1000px;">
+        <p>El modelo fue entrenado a partir de un conjunto de datos (dataset) compuesto por miles de imágenes recolectadas y anotadas manualmente. La red fue instruida para clasificar y localizar las siguientes categorías requeridas para la validación de acceso:</p>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>ID Clase</th>
+              <th>Descripción del Objeto</th>
+              <th>Criticidad para Acceso</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>Guantes de seguridad industrial</td><td>Requerido</td></tr>
+            <tr><td>1</td><td>Lentes de seguridad</td><td>Requerido</td></tr>
+            <tr><td>2</td><td>Casco de protección</td><td>Requerido</td></tr>
+            <tr><td>4</td><td>Calzado / Botas de seguridad</td><td>Requerido</td></tr>
+            <tr><td>5</td><td>Chaleco de alta visibilidad</td><td>Requerido</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 15px; font-size: 0.95rem; color: var(--muted);">Nota: La clase 3 (Persona) se emplea como referencia para el tracking general, pero no determina la autorización de acceso.</p>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 6: Arquitectura y Lógica de Operación -->
+    <div class="slide">
+      <h2 class="content-title">Arquitectura del Sistema en Tiempo Real</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Flujo de Datos</h3>
+          <ol style="padding-left: 20px; line-height: 1.7; color: #cbd5e1; font-size: 1.1rem; margin-bottom: 15px;">
+            <li><strong>Captura:</strong> Inicialización del hardware de video (Webcam) a través de los protocolos del navegador.</li>
+            <li><strong>Extracción:</strong> Muestreo de fotogramas e inyección en formato Base64 hacia el servidor de inferencia.</li>
+            <li><strong>Predicción:</strong> La API de Roboflow evalúa la matriz y retorna un documento JSON con coordenadas espaciales y niveles de confianza.</li>
+            <li><strong>Renderizado:</strong> La aplicación cliente dibuja la superposición gráfica sobre el flujo de video original.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Motor de Decisión (Control Lógico)</h3>
+          <p>La autorización se basa en una intersección estricta de conjuntos de datos. El sistema evalúa si el arreglo de clases detectadas contiene la totalidad de los identificadores requeridos [0, 1, 2, 4, 5].</p>
+          <ul>
+            <li><strong>Ausencia total:</strong> Alerta crítica.</li>
+            <li><strong>Detección parcial:</strong> Retroalimentación granular indicando exactamente el elemento faltante.</li>
+            <li><strong>Detección total:</strong> Señal de autorización de acceso.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAPOSITIVA 7: Cierre y Demostración -->
+    <div class="slide" style="text-align: center;">
+      <h1 class="title">Verificación Funcional</h1>
+      <p class="subtitle">A continuación, se procederá con una demostración técnica en vivo para evaluar la velocidad de inferencia, la precisión de los umbrales de confianza y la latencia del sistema en un entorno de prueba real.</p>
+      <a href="index.html" class="demo-btn">Ejecutar Demostración del Sistema</a>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <button class="btn-nav" id="prev" title="Anterior">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="btn-nav" id="next" title="Siguiente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const slideNumber = document.getElementById('slide-number');
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+          if (index < currentSlide) {
+            slide.style.transform = 'translateY(-50px) scale(0.95)';
+          } else {
+            slide.style.transform = 'translateY(50px) scale(0.95)';
+          }
+        }
+      });
+      progress.style.width = ((currentSlide) / (totalSlides - 1)) * 100 + '%';
+      slideNumber.textContent = `0${currentSlide + 1} / 0${totalSlides}`;
+    }
+
+    document.getElementById('next').addEventListener('click', () => {
+      if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); }
+    });
+
+    document.getElementById('prev').addEventListener('click', () => {
+      if (currentSlide > 0) { currentSlide--; updateSlides(); }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        if (currentSlide < totalSlides - 1) { currentSlide++; updateSlides(); }
+      }
+      if (e.key === 'ArrowLeft') {
+        if (currentSlide > 0) { currentSlide--; updateSlides(); }
+      }
+    });
+
+    updateSlides();
+  </script>
+</body>
+</html>
