@@ -6,21 +6,21 @@
 // ═══════════════════════════════════════════════
 
 // ── CONFIG ──────────────────────────────────────
-const ROBOFLOW_PROJECT = 'epp_seguridad';
+const ROBOFLOW_PROJECT = 'epps_project';
 const ROBOFLOW_VERSION = '1';
 
 const EPP_CLASSES = {
-  0: { name: 'Guantes',  icon: '🧤', required: true  },
-  1: { name: 'Lentes',   icon: '🥽', required: true  },
-  2: { name: 'Casco',    icon: '🪖', required: true  },
-  3: { name: 'Persona',  icon: '👤', required: false },
-  4: { name: 'Botas',    icon: '👢', required: true  },
-  5: { name: 'Chaleco',  icon: '🦺', required: true  },
+  'botas':    { name: 'Botas',    icon: '👢', required: true  },
+  'casco':    { name: 'Casco',    icon: '🪖', required: true  },
+  'chaleco':  { name: 'Chaleco',  icon: '🦺', required: true  },
+  'mascara':  { name: 'Máscara',  icon: '😷', required: true  },
+  'orejeras': { name: 'Orejeras', icon: '🎧', required: true  },
+  'persona':  { name: 'Persona',  icon: '👤', required: false },
 };
 
 const REQUIRED_IDS = Object.entries(EPP_CLASSES)
   .filter(([, v]) => v.required)
-  .map(([k]) => Number(k));   // [0, 1, 2, 4, 5]
+  .map(([k]) => k);
 
 const BOX_COLORS = {
   required : '#10B981',   // green  → required EPP detected
@@ -140,7 +140,7 @@ async function startCamera() {
   if (!apiKey) { openModal(); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' }
     });
     video.srcObject = stream;
     await video.play();
@@ -226,14 +226,14 @@ async function runDetection() {
 // ── PROCESS RESULTS ──────────────────────────────
 function processResults(data) {
   const preds = (data.predictions || []).filter(
-    p => p.confidence >= confidenceThresh
+    p => p.confidence >= confidenceThresh && EPP_CLASSES[p.class] !== undefined
   );
 
   syncOverlay();
   drawBoxes(preds, data.image);
 
   // Which required EPPs are detected?
-  const detectedIds  = new Set(preds.map(p => p.class_id));
+  const detectedIds  = new Set(preds.map(p => p.class));
   const missingIds   = REQUIRED_IDS.filter(id => !detectedIds.has(id));
   const detectedReq  = REQUIRED_IDS.filter(id => detectedIds.has(id));
 
@@ -267,7 +267,7 @@ function drawBoxes(preds, imageInfo) {
   const scaleY = overlay.height / (imageInfo?.height || INPUT_H);
 
   preds.forEach(pred => {
-    const epp    = EPP_CLASSES[pred.class_id];
+    const epp    = EPP_CLASSES[pred.class];
     const color  = epp?.required ? BOX_COLORS.required : BOX_COLORS.optional;
     const label  = `${epp?.icon || ''} ${epp?.name || pred.class} ${Math.round(pred.confidence * 100)}%`;
 
@@ -321,8 +321,8 @@ function drawBoxes(preds, imageInfo) {
 function updateEppCards(preds, detectedIds) {
   const bestConf = {};
   preds.forEach(p => {
-    if (!bestConf[p.class_id] || p.confidence > bestConf[p.class_id])
-      bestConf[p.class_id] = p.confidence;
+    if (!bestConf[p.class] || p.confidence > bestConf[p.class])
+      bestConf[p.class] = p.confidence;
   });
 
   REQUIRED_IDS.forEach(id => {

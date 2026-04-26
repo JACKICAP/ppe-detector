@@ -189,6 +189,25 @@
       letter-spacing: 0.1em;
     }
 
+    /* Responsive Design para Celulares */
+    @media (max-width: 768px) {
+      .slide { padding: 5% 6%; overflow-y: auto; justify-content: flex-start; }
+      .grid-2 { grid-template-columns: 1fr; gap: 20px; }
+      .title { font-size: 2.2rem; margin-top: 30px; }
+      .subtitle { font-size: 1.1rem; margin-bottom: 20px; }
+      .content-title { font-size: 1.8rem; margin-top: 20px; margin-bottom: 20px; }
+      .card { padding: 20px; }
+      .card h3 { font-size: 1.3rem; margin-bottom: 10px; }
+      .card p, .card li { font-size: 1rem; }
+      .tech-tags { justify-content: flex-start; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+      th, td { font-size: 0.9rem; padding: 10px; }
+      .slide-number { bottom: 20px; left: 20px; font-size: 0.9rem; }
+      .controls { bottom: 20px; right: 20px; gap: 10px; }
+      .btn-nav { width: 45px; height: 45px; }
+      .demo-btn { padding: 12px 30px; font-size: 1.1rem; margin-top: 30px; }
+    }
+
   </style>
 </head>
 <body>
@@ -276,20 +295,20 @@
         <table>
           <thead>
             <tr>
-              <th>ID Clase</th>
+              <th>Clase (Modelo)</th>
               <th>Descripción del Objeto</th>
               <th>Criticidad para Acceso</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>0</td><td>Guantes de seguridad industrial</td><td>Requerido</td></tr>
-            <tr><td>1</td><td>Lentes de seguridad</td><td>Requerido</td></tr>
-            <tr><td>2</td><td>Casco de protección</td><td>Requerido</td></tr>
-            <tr><td>4</td><td>Calzado / Botas de seguridad</td><td>Requerido</td></tr>
-            <tr><td>5</td><td>Chaleco de alta visibilidad</td><td>Requerido</td></tr>
+            <tr><td>botas</td><td>Calzado / Botas de seguridad</td><td>Requerido</td></tr>
+            <tr><td>casco</td><td>Casco de protección</td><td>Requerido</td></tr>
+            <tr><td>chaleco</td><td>Chaleco de alta visibilidad</td><td>Requerido</td></tr>
+            <tr><td>mascara</td><td>Máscara de protección</td><td>Requerido</td></tr>
+            <tr><td>orejeras</td><td>Orejeras de protección</td><td>Requerido</td></tr>
           </tbody>
         </table>
-        <p style="margin-top: 15px; font-size: 0.95rem; color: var(--muted);">Nota: La clase 3 (Persona) se emplea como referencia para el tracking general, pero no determina la autorización de acceso.</p>
+        <p style="margin-top: 15px; font-size: 0.95rem; color: var(--muted);">Nota: La clase 'persona' se emplea como referencia para el tracking general. Otras clases como 't_quimico' son ignoradas por el sistema.</p>
       </div>
     </div>
 
@@ -308,7 +327,7 @@
         </div>
         <div class="card">
           <h3>Motor de Decisión (Control Lógico)</h3>
-          <p>La autorización se basa en una intersección estricta de conjuntos de datos. El sistema evalúa si el arreglo de clases detectadas contiene la totalidad de los identificadores requeridos [0, 1, 2, 4, 5].</p>
+          <p>La autorización se basa en una intersección estricta de conjuntos de datos. El sistema evalúa si el arreglo de clases detectadas contiene la totalidad de los 5 elementos requeridos.</p>
           <ul>
             <li><strong>Ausencia total:</strong> Alerta crítica.</li>
             <li><strong>Detección parcial:</strong> Retroalimentación granular indicando exactamente el elemento faltante.</li>
